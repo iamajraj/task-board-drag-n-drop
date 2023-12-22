@@ -1,8 +1,6 @@
-# React + Vite
+# Task Board List
+A task appplication to save different categories task. User can create **NEW** custom **CATEGORY** board and can add **NEW** **TASK**, also with selecting the custom category.
+##
+### User can drag and drop to change the task and add it to different task category board
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![screenshot](https://github.com/iamajraj/task-board-drag-n-drop/blob/main/screenshot.png)
