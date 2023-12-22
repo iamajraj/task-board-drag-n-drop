@@ -54,7 +54,11 @@ function Lists() {
   return (
     <div className="mt-10">
       <AddCategoryView setCategories={setCategories} />
-      <AddTaskView categories={categories} />
+      <AddTaskView
+        todos={observedTodos}
+        setTodos={setObservedTodos}
+        categories={categories}
+      />
       <DragDropContext
         onDragEnd={(res, provided) => {
           if (!res.destination) return;
@@ -87,14 +91,25 @@ function Lists() {
   );
 }
 
-function AddTaskView({ categories }) {
+function AddTaskView({ categories, todos, setTodos }) {
   const [task, setTask] = useState({
     id: 0,
     title: '',
     category: '',
   });
 
-  const addTask = () => {};
+  const addTask = () => {
+    const { title, category } = task;
+    if (!title || !category) return;
+    if (categories.findIndex((f_category) => f_category.id === category) === -1)
+      return;
+    if (!todos[category]) {
+      todos[category] = [];
+    }
+    task.id = String(Date.now());
+    todos[category].push(task);
+    setTodos(() => Object.assign({}, todos));
+  };
 
   return (
     <div className="w-full border-b pb-5 mb-5 flex flex-col max-w-2xl">
@@ -114,7 +129,9 @@ function AddTaskView({ categories }) {
         className="mt-5 py-3 border rounded-lg px-4 focus:outline-none">
         <option>Select the category</option>
         {categories.map((category) => (
-          <option value={category.id}>{category.name}</option>
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
         ))}
       </select>
       <button
