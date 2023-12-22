@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
-const type = ['todo', 'ongoing', 'completed'];
-
+// categories
+const todoCategories = [
+  {
+    id: 'todo',
+    name: 'Todo',
+  },
+  {
+    id: 'ongoing',
+    name: 'On Going',
+  },
+  {
+    id: 'completed',
+    name: 'Completed',
+  },
+  {
+    id: 'notyet',
+    name: 'Not Yet',
+  },
+];
+// assume it's coming from database
 let todos = {
   todo: [
     {
@@ -28,24 +46,40 @@ let todos = {
 };
 
 function Lists() {
+  const [observedTodos, setObservedTodos] = useState(() =>
+    Object.assign({}, todos)
+  );
+  const [categories, setCategories] = useState(todoCategories);
+
   return (
     <div className="mt-10">
+      <AddCategoryView setCategories={setCategories} />
+      <AddTaskView categories={categories} />
       <DragDropContext
         onDragEnd={(res, provided) => {
-          let draggedTodo = todos[res.source.droppableId].splice(
+          if (!res.destination) return;
+          let draggedTodo = observedTodos[res.source.droppableId].splice(
             res.source.index,
             1
           )[0];
           draggedTodo.category = res.destination.droppableId;
-          todos[res.destination.droppableId].splice(
+          if (!observedTodos[res.destination.droppableId]) {
+            observedTodos[res.destination.droppableId] = [];
+          }
+          observedTodos[res.destination.droppableId].splice(
             res.destination.index,
             0,
             draggedTodo
           );
+          setObservedTodos(() => Object.assign({}, observedTodos));
         }}>
         <div className="grid grid-cols-3 gap-10">
-          {type.map((t) => (
-            <ListType type={t} todos={todos[t]} key={t} />
+          {Object.values(categories).map((category) => (
+            <ListTaskCategory
+              category={category}
+              todos={observedTodos[category.id] ?? []}
+              key={category.id}
+            />
           ))}
         </div>
       </DragDropContext>
@@ -53,15 +87,85 @@ function Lists() {
   );
 }
 
-function ListType({ type, todos }) {
+function AddTaskView({ categories }) {
+  const [task, setTask] = useState({
+    id: 0,
+    title: '',
+    category: '',
+  });
+
+  const addTask = () => {};
+
+  return (
+    <div className="w-full border-b pb-5 mb-5 flex flex-col max-w-2xl">
+      <p className="font-medium">Add New Task</p>
+      <input
+        type="text"
+        placeholder="e.g I wanna do..."
+        className="border rounded-md py-2 px-5 outline-none mt-2"
+        onChange={(e) =>
+          setTask((task) => ({ ...task, title: e.target.value }))
+        }
+      />
+      <select
+        onChange={(e) =>
+          setTask((task) => ({ ...task, category: e.target.value }))
+        }
+        className="mt-5 py-3 border rounded-lg px-4 focus:outline-none">
+        <option>Select the category</option>
+        {categories.map((category) => (
+          <option value={category.id}>{category.name}</option>
+        ))}
+      </select>
+      <button
+        onClick={addTask}
+        className="px-4 cursor-pointer py-2 bg-indigo-500 hover:bg-indigo-400 text-white transition-all rounded-full w-max mt-5">
+        Add Task
+      </button>
+    </div>
+  );
+}
+
+function AddCategoryView({ setCategories }) {
+  const categoryNameRef = useRef(null);
+
+  const addCategory = () => {
+    if (!categoryNameRef.current) return;
+    const name = categoryNameRef.current.value?.trim();
+    if (name === '') return;
+    const newCategory = {
+      id: name.replaceAll(' ', '_').toLowerCase(),
+      name,
+    };
+    setCategories((category) => [...category, newCategory]);
+  };
+
+  return (
+    <div className="w-full border-b pb-5 mb-5 flex items-center gap-4">
+      <input
+        className="border rounded-md px-5 py-3 focus:outline-none"
+        type="text"
+        placeholder="Enter category name"
+        ref={categoryNameRef}
+      />
+      <button
+        onClick={addCategory}
+        className="px-4 cursor-pointer py-2 bg-indigo-500 hover:bg-indigo-400 text-white transition-all rounded-full">
+        Add
+      </button>
+    </div>
+  );
+}
+
+function ListTaskCategory({ category, todos }) {
   return (
     <div className="border rounded-lg">
       <p className="text-lg font-medium p-5 bg-gray-50 rounded-lg border-b">
-        {String(type).toUpperCase()}
+        {String(category.name).toUpperCase()}
       </p>
-      <Droppable droppableId={type}>
+      <Droppable droppableId={category.id}>
         {(provided, snapshot) => (
-          <div ref={provided.innerRef} className="flex flex-col gap-2">
+          <div ref={provided.innerRef} className="flex flex-col gap-2 py-5">
             {todos.map((todo, i) => {
               return <TodoView index={i} todo={todo} key={todo.id} />;
             })}
